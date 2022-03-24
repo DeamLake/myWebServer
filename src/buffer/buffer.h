@@ -1,10 +1,12 @@
+#pragma once
 #include <vector>
 #include <atomic>
 #include <sys/uio.h> // iovec 
 #include <errno.h>
 #include <unistd.h> // write
 #include <assert.h>
-#include<string.h> // bzero
+#include <string>
+#include <string.h> // bzero
  
 class Buffer {
 public:
@@ -20,6 +22,7 @@ public:
 
     void Retrieve(size_t len);
     void RetrieveAll();
+    std::string RetrieveAllToStr();
     ssize_t ReadFd(int fd, int* Errno);
     ssize_t WriteFd(int fd, int* Errno);
 

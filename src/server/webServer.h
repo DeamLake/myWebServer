@@ -1,3 +1,4 @@
+#pragma once
 #include <sys/socket.h> // socket
 #include <arpa/inet.h> // htons linger
 #include <unistd.h> // close
@@ -6,12 +7,16 @@
 #include <unordered_map>
 
 #include "Epoller.h"
+#include "../log/log.h"
 #include "../http/httpconn.h"
 #include "../pool/threadpool.h"
 
+
 class WebServer {
 public:
-    WebServer(int port, int trigMode, int threadNum);
+    WebServer(
+        int port, int trigMode, bool OptLinger, int threadNum,
+        bool openLog, int logLevel, int logQueueSize);
     ~WebServer();
     void start();
 
@@ -31,7 +36,8 @@ private:
 private:
     int port_;
     int listenFd_;
-    bool isClose = false;
+    bool openLinger_;
+    bool isClose_;
 
     uint32_t listenEvent_;
     uint32_t connEvent_;

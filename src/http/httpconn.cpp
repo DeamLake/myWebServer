@@ -1,6 +1,5 @@
-#include <iostream>
+#include "../log/log.h"
 #include "httpconn.h"
-using namespace std;
 
 std::atomic<int> HttpConn::userCount;
 bool HttpConn::isET;
@@ -35,7 +34,7 @@ void HttpConn::Init(int sockFd, const sockaddr_in& addr) {
     readBuff_.RetrieveAll();
     writeBuff_.RetrieveAll();
     isClose = false;
-    std::cout<< "Client: " << fd_ << " in!" <<std::endl; 
+    LOG_INFO("Client: %d in!",fd_);
 }
 
 ssize_t HttpConn::read(int* saveErrno) {

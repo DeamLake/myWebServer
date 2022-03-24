@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include <iostream>
 
 
 Buffer::Buffer(int BufferSize): buffer_(BufferSize), readPos_(0), writePos_(0) {}
@@ -45,6 +44,12 @@ void Buffer::RetrieveAll() {
     bzero(&buffer_[0],buffer_.size());
     readPos_  = 0;
     writePos_ = 0;
+}
+
+std::string Buffer::RetrieveAllToStr() {
+    std::string str(Peek(), ReadableBytes());
+    RetrieveAll();
+    return str;
 }
 
 void Buffer::EnsureWritable(size_t len) {

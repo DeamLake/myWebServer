@@ -1,6 +1,6 @@
+#pragma once
 #include <arpa/inet.h> //sockaddr_in
 #include <assert.h>
-
 #include "../buffer/buffer.h"
 
 class HttpConn {

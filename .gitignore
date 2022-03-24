@@ -1,6 +1,7 @@
 # directories
 .vscode/
 build/
+log/
 
 # Prerequisites
 *.d

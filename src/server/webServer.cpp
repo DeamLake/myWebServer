@@ -1,25 +1,42 @@
 #include "webServer.h"
-#include <iostream>
 using namespace std;
 
-WebServer::WebServer(int port, int trigMode, int threadNum): port_(port), 
-            threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller()){
+WebServer::WebServer(
+    int port, int trigMode, bool OptLinger, int threadNum,
+    bool openLog, int logLevel, int logQueSize): 
+    port_(port), openLinger_(OptLinger), isClose_(false),
+    threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller())
+{
     if(!InitSocket()) { 
-        cout<< "Init Socket Failed" <<endl; 
+        LOG_INFO("Init Socket Failed");
     }
     HttpConn::userCount = 0;
     InitEventMode(trigMode);
+    if(openLog) {
+        Log::Instance()->init(logLevel, "./log", ".log", logQueSize);
+        if(isClose_) { LOG_ERROR("========== Server init error!=========="); }
+        else {
+            LOG_INFO("========== Server init ==========");
+            LOG_INFO("Port:%d, OpenLinger: %s", port_, OptLinger? "true":"false");
+            LOG_INFO("Listen Mode: %s, OpenConn Mode: %s",
+                            (listenEvent_ & EPOLLET ? "ET": "LT"),
+                            (connEvent_ & EPOLLET ? "ET": "LT"));
+            LOG_INFO("LogSys level: %d", logLevel);
+            //LOG_INFO("srcDir: %s", HttpConn::srcDir);
+            //LOG_INFO("SqlConnPool num: %d, ThreadPool num: %d", connPoolNum, threadNum);
+        }
+    }
 }
 
 WebServer::~WebServer(){
     close(listenFd_);
-    isClose = true;
-    cout<< "Close Succeed!"<< endl;
+    isClose_ = true;
+    LOG_INFO("Close Succeed!");
 }
 
 bool WebServer::InitSocket(){
     if(port_ > 65535 || port_ < 1024) { 
-        cout<< "Wrong port num"<<endl;
+        LOG_INFO("Wrong port num");
         return false; 
     }
     
@@ -30,37 +47,50 @@ bool WebServer::InitSocket(){
 
     listenFd_ = socket(AF_INET, SOCK_STREAM, 0);
     if(listenFd_ < 0) { 
-        cout<< "socket build failed" <<endl;
+        LOG_INFO("socket build failed!");
         return false; 
     }
 
-    int optval = 1;
-    // port reuse
-    int ret = setsockopt(listenFd_, SOL_SOCKET, SO_REUSEADDR, (const void*)&optval, sizeof(int));
+    linger optLinger = { 0 };
+    if(openLinger_) {
+        optLinger.l_onoff = 1;
+        optLinger.l_linger = 1;
+    }
+
+    int ret = setsockopt(listenFd_, SOL_SOCKET, SO_LINGER, &optLinger, sizeof(optLinger));
     if(ret < 0){
-        cout<< "set socket setsockopt error!" <<endl;
+        LOG_INFO("Init linger error!");
+        close(listenFd_);
+        return false;
+    }
+
+    // port reuse
+    int optval = 1;
+    ret = setsockopt(listenFd_, SOL_SOCKET, SO_REUSEADDR, (const void*)&optval, sizeof(int));
+    if(ret < 0){
+        LOG_INFO("set socket setsockopt error!!");
         close(listenFd_);
         return false;
     }
 
     ret = bind(listenFd_, (sockaddr*)&addr, sizeof(addr));
     if(ret < 0){
-        cout<< "Bind port: " << port_ << " error!" <<endl;
+        LOG_INFO("Bind port: %d error", port_);
         return false;
     }
 
     ret = listen (listenFd_, 8);
     if(ret < 0){
-        cout<< "Listen port: " << port_ << " error!" <<endl;
+        LOG_INFO("Listen port: %d error!", port_);
         return false;
     }
 
     ret = epoller_->AddFd(listenFd_, listenEvent_ | EPOLLIN);
     if(ret < 0){
-        cout<< "Add listen error!" <<endl;
+        LOG_INFO("Add listen error!");
     }
     SetFdNonblock(listenFd_);
-    cout<< "Server port: "<< port_ <<endl;
+    LOG_INFO("Server port: %d", port_);
     return true;
 }
 
@@ -90,8 +120,8 @@ void WebServer::InitEventMode(int trigMode) {
 }
 
 void WebServer::start(){
-    if(!isClose) { cout<< "============ Server start ============" <<endl;}
-    while(!isClose){
+    if(!isClose_) { LOG_INFO("============ Server start ============");}
+    while(!isClose_){
         int eventCnt = epoller_->wait(1000);
         for(int i = 0; i < eventCnt; i++) {
             int fd = epoller_->GetEventFd(i);
@@ -110,10 +140,11 @@ void WebServer::start(){
 }
 
 void WebServer::CloseConn(HttpConn* client){
-    cout<< "Client: " << client->getFd() << " quit!" <<endl;
-    cout<< "User Count: " << HttpConn::userCount <<endl;
     epoller_->DelFd(client->getFd());
     client->Close();
+    LOG_INFO("Client: %d quit!",client->getFd());
+    int count = HttpConn::userCount;
+    LOG_INFO("User Count: %d",count);
 }
 
 void WebServer::AddClient(int fd, sockaddr_in addr) {
@@ -121,7 +152,6 @@ void WebServer::AddClient(int fd, sockaddr_in addr) {
     users_[fd].Init(fd,addr);
     epoller_->AddFd(fd, connEvent_ | EPOLLIN);
     SetFdNonblock(fd);
-    cout<< "User Count: " << HttpConn::userCount <<endl;
 }
 
 void WebServer::DealListen() {
@@ -130,7 +160,7 @@ void WebServer::DealListen() {
     do {
         int fd = accept(listenFd_, (sockaddr*)&addr, &len);
         if(fd <= 0) { return;}
-        cout<< "accept: " << fd << endl;
+        LOG_INFO("Accept: %d",fd);
         AddClient(fd, addr);
     } while(listenEvent_ & EPOLLET);
 }

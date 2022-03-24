@@ -1,3 +1,4 @@
+#pragma once
 #include <sys/epoll.h>
 #include <vector>
 #include <assert.h> 
