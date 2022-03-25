@@ -40,6 +40,11 @@ void Buffer::Retrieve(size_t len) {
     readPos_ += len;
 }
 
+void Buffer::RetrieveUntil(const char* end){
+    assert(Peek() <= end);
+    Retrieve(end - Peek());
+}
+
 void Buffer::RetrieveAll() {
     bzero(&buffer_[0],buffer_.size());
     readPos_  = 0;
@@ -69,10 +74,22 @@ void Buffer::MakeSpace(size_t len) {
     }
 }
 
-void Buffer::Append(const char* str, size_t len){
+void Buffer::Append(const std::string& str) {
+    Append(str.data(), str.length());
+}
+
+void Buffer::Append(const void* data, size_t len){
+    Append(static_cast<const char*>(data), len);
+}
+
+void Buffer::Append(const char* str, size_t len) {
     EnsureWritable(len);
     std::copy(str, str+len, BeginWrite());
     HasWritten(len);
+}
+
+void Buffer::Append(const Buffer& buff){
+    Append(buff.Peek(), buff.ReadableBytes());
 }
 
 ssize_t Buffer::ReadFd(int fd, int* saveError) {

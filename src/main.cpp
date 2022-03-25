@@ -2,7 +2,7 @@
 
 int main(){
     WebServer server(
-        1321, 3, true, 6,    // port trigmode optlinger threadnum
-        true, 1, 1024);      // openlog loglevel logqueuesize
+        1321, 3, 60000, true,  // port       trigmode  timeout  optlinger
+        6, true, 1, 1024);     // threadnum  openlog   loglevel logqueuesize
     server.start();
 }

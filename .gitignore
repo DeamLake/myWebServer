@@ -1,7 +1,8 @@
 # directories
-/.vscode/
-/build/
-/log/
+.vscode/
+build/
+logs/
+webbench-1.5/
 
 # Prerequisites
 *.d

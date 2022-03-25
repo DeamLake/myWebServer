@@ -2,10 +2,10 @@
 using namespace std;
 
 WebServer::WebServer(
-    int port, int trigMode, bool OptLinger, int threadNum,
-    bool openLog, int logLevel, int logQueSize): 
-    port_(port), openLinger_(OptLinger), isClose_(false),
-    threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller())
+    int port, int trigMode, int timeoutMS, bool OptLinger, 
+    int threadNum,bool openLog, int logLevel, int logQueSize): 
+    port_(port), openLinger_(OptLinger), timeoutMS_(timeoutMS), isClose_(false),
+    timer_(new HeapTimer()),threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller())
 {
     if(!InitSocket()) { 
         LOG_INFO("Init Socket Failed");
@@ -13,7 +13,7 @@ WebServer::WebServer(
     HttpConn::userCount = 0;
     InitEventMode(trigMode);
     if(openLog) {
-        Log::Instance()->init(logLevel, "./log", ".log", logQueSize);
+        Log::Instance()->init(logLevel, "./logs", ".logs", logQueSize);
         if(isClose_) { LOG_ERROR("========== Server init error!=========="); }
         else {
             LOG_INFO("========== Server init ==========");
@@ -120,9 +120,13 @@ void WebServer::InitEventMode(int trigMode) {
 }
 
 void WebServer::start(){
+    int timeMS = -1;
     if(!isClose_) { LOG_INFO("============ Server start ============");}
     while(!isClose_){
-        int eventCnt = epoller_->wait(1000);
+        if(timeoutMS_ > 0) {
+            timeMS = timer_->GetNextTick();
+        }
+        int eventCnt = epoller_->wait(timeMS);
         for(int i = 0; i < eventCnt; i++) {
             int fd = epoller_->GetEventFd(i);
             size_t events = epoller_->GetEvents(i);
@@ -150,6 +154,9 @@ void WebServer::CloseConn(HttpConn* client){
 void WebServer::AddClient(int fd, sockaddr_in addr) {
     assert(fd > 0);
     users_[fd].Init(fd,addr);
+    if(timeoutMS_ > 0) {
+        timer_->add(fd, timeoutMS_, std::bind(&WebServer::CloseConn, this, &users_[fd]));
+    }
     epoller_->AddFd(fd, connEvent_ | EPOLLIN);
     SetFdNonblock(fd);
 }
@@ -166,7 +173,15 @@ void WebServer::DealListen() {
 }
 
 void WebServer::DealRead(HttpConn* client) {
+    assert(client);
+    ExtentTime(client);
+    LOG_INFO("Something read from: %d",client->getFd());
     threadpool_->AddTask(std::bind(&WebServer::OnRead,this,client));
+}
+
+void WebServer::ExtentTime(HttpConn* client) {
+    assert(client);
+    if(timeoutMS_ > 0) { timer_->adjust(client->getFd(), timeoutMS_);}
 }
 
 void WebServer::OnRead(HttpConn* client) {
