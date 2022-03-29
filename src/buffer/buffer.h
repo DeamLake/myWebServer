@@ -18,6 +18,7 @@ public:
     size_t UselessBytes() const;
 
     char* BeginWrite();
+    const char* BeginWriteConst() const;
     const char* Peek() const;
     void HasWritten(size_t len);
 

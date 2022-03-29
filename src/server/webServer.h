@@ -29,10 +29,16 @@ private:
 
     void DealListen();
     void DealRead(HttpConn* client);
+    void DealWrite(HttpConn* client);
 
+    void SendError(int fd, const char* info);
     void ExtentTime(HttpConn* client);
+
     void OnRead(HttpConn* client);
+    void OnWrite(HttpConn* client);
     void OnProcess(HttpConn* client);
+
+    static const int MAX_FD = 65536;
 
     static int SetFdNonblock(int fd);
 private:
@@ -41,6 +47,7 @@ private:
     bool openLinger_;
     int timeoutMS_;
     bool isClose_;
+    char* srcDir_;
 
     uint32_t listenEvent_;
     uint32_t connEvent_;

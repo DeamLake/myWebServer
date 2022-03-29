@@ -24,7 +24,11 @@ const char* Buffer::BeginPtr() const{
 }
 
 char* Buffer::BeginWrite(){
-    return BeginPtr()+writePos_;
+    return BeginPtr() + writePos_;
+}
+
+const char* Buffer::BeginWriteConst() const {
+    return BeginPtr() + writePos_;
 }
 
 const char* Buffer::Peek() const{
