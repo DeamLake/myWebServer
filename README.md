@@ -4,7 +4,7 @@ Writen by C++
 
 The most of details are based on 
 
-[qinguoyi's TinyWebServer](https://github.com/qinguoyi/TinyWebServer) and 高性能服务器编程 by 游双
+[qinguoyi's TinyWebServer](https://github.com/qinguoyi/TinyWebServer) and Linux高性能服务器编程 by 游双
 
 # Dependence
 
