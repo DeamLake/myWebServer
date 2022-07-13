@@ -5,33 +5,15 @@ const char* HttpConn::srcDir;
 std::atomic<int> HttpConn::userCount;
 bool HttpConn::isET;
 
-HttpConn::HttpConn() {
+HttpConn::HttpConn() 
+{
     fd_ = -1;
     addr_ = {0};
     isClose = true;
 }
 
-HttpConn::~HttpConn() {
-    Close();
-}
-
-int HttpConn::GetFd() const{
-    return fd_;
-}
-
-int HttpConn::GetPort() const {
-    return addr_.sin_port;
-}
-
-const char* HttpConn::GetIP() const {
-    return inet_ntoa(addr_.sin_addr);
-}
-
-sockaddr_in HttpConn::GetAddr() const {
-    return addr_;
-}
-
-void HttpConn::Init(int sockFd, const sockaddr_in& addr) {
+void HttpConn::Init(int sockFd, const sockaddr_in& addr) 
+{
     assert(sockFd > 0);
     userCount++;
     fd_ = sockFd;
@@ -42,7 +24,8 @@ void HttpConn::Init(int sockFd, const sockaddr_in& addr) {
     LOG_INFO("Client[%d](%s:%d) in, userCount:%d",fd_, GetIP(), GetPort(), (int)userCount);
 }
 
-void HttpConn::Close(){
+void HttpConn::Close()
+{
     if(isClose == false) {
         isClose = true;
         userCount--;
@@ -51,7 +34,8 @@ void HttpConn::Close(){
     }
 }
 
-ssize_t HttpConn::read(int* saveErrno) {
+ssize_t HttpConn::read(int* saveErrno) 
+{
     ssize_t len = -1;
     do {
         len = readBuff_.ReadFd(fd_, saveErrno);
@@ -60,7 +44,8 @@ ssize_t HttpConn::read(int* saveErrno) {
     return len;
 }
 
-ssize_t HttpConn::write(int* saveErrno) {
+ssize_t HttpConn::write(int* saveErrno) 
+{
     ssize_t len = -1;
     do {
         len = writev(fd_, iov_, iovCnt_);
@@ -85,7 +70,8 @@ ssize_t HttpConn::write(int* saveErrno) {
     return len;
 }
 
-bool HttpConn::process() {
+bool HttpConn::process() 
+{
     request_.Init();
     if(readBuff_.ReadableBytes() <= 0)
         return false;

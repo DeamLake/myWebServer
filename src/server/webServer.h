@@ -11,9 +11,10 @@
 #include "../http/httpconn.h"
 #include "../pool/threadpool.h"
 #include "../timer/heaptimer.h"
+#include "../pool/sqlconnRAII.h"
 
-
-class WebServer {
+class WebServer 
+{
 public:
     WebServer(
         int port, int trigMode, int timeoutMS, bool OptLinger, 

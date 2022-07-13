@@ -6,9 +6,11 @@
 #include <functional>
 #include <condition_variable>
 
-class ThreadPool {
+class ThreadPool 
+{
 public:
-    explicit ThreadPool(size_t threadCount = 8): pool_(std::make_shared<Pool>()){
+    explicit ThreadPool(size_t threadCount = 8): pool_(std::make_shared<Pool>())
+    {
         assert(threadCount > 0);
         for(int i = 0; i < static_cast<int>(threadCount); i++){
             std::thread([pool = pool_] {
@@ -30,7 +32,8 @@ public:
     ThreadPool() = delete;
     ThreadPool(ThreadPool&&) = delete;
 
-    ~ThreadPool() {
+    ~ThreadPool() 
+    {
         if(static_cast<bool>(pool_)) {
             {
                 std::lock_guard<std::mutex> locker(pool_->mtx);
@@ -41,7 +44,8 @@ public:
     }
 
     template<class F>
-    void AddTask(F&& task) {
+    void AddTask(F&& task) 
+    {
         {
             std::lock_guard<std::mutex> locker(pool_->mtx);
             pool_->tasks.emplace(std::forward<F>(task));
@@ -49,7 +53,8 @@ public:
         pool_->cond.notify_one();
     }
 private:
-    struct Pool {
+    struct Pool 
+    {
         std::mutex mtx;
         std::condition_variable cond;
         bool isClose;

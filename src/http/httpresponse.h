@@ -9,16 +9,17 @@
 #include "../buffer/buffer.h"
 #include "../log/log.h"
 
-class HttpResponse {
+class HttpResponse 
+{
 public:
     HttpResponse();
-    ~HttpResponse();
+    ~HttpResponse() { UnmapFile(); }
 
     void Init(const std::string& srcDir, std::string& path, bool isKeepAlive = false, int code = -1);
     void MakeResponse(Buffer& buff);
     void UnmapFile();
-    char* File();
-    size_t FileLen() const;
+    char* File() { return mmFile_; }
+    size_t FileLen() const { return mmFileStat_.st_size; }
     void ErrorContent(Buffer& buff, std::string message);
     int Code() const { return code_; }
 

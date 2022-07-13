@@ -8,19 +8,20 @@
 #include <string>
 #include <string.h> // bzero
  
-class Buffer {
+class Buffer 
+{
 public:
-    Buffer(int BufferSIze = 1024);
+    Buffer(int BufferSIze = 1024): buffer_(BufferSIze), readPos_(0), writePos_(0) {}
     ~Buffer() = default;
 
-    size_t ReadableBytes() const;
-    size_t WritableBytes() const;
-    size_t UselessBytes() const;
+    size_t ReadableBytes() const { return writePos_-readPos_; }
+    size_t WritableBytes() const { return buffer_.size() - writePos_; }
+    size_t UselessBytes() const { return readPos_; }
 
-    char* BeginWrite();
-    const char* BeginWriteConst() const;
-    const char* Peek() const;
-    void HasWritten(size_t len);
+    char* BeginWrite() { return BeginPtr() + writePos_; }
+    const char* BeginWriteConst() const { return BeginPtr() + writePos_; }
+    const char* Peek() const { return BeginPtr() + readPos_; }
+    void HasWritten(size_t len) { writePos_ += len; }
 
     void Retrieve(size_t len);
     void RetrieveAll();
@@ -37,8 +38,8 @@ public:
     void Append(const Buffer& buff);
 
 private:
-    char* BeginPtr();
-    const char* BeginPtr() const;
+    char* BeginPtr() { return &*buffer_.begin(); }
+    const char* BeginPtr() const { return &*buffer_.begin(); }
     void MakeSpace(size_t len);
     std::vector<char> buffer_;
     std::atomic<std::size_t> readPos_;

@@ -4,10 +4,11 @@
 #include <assert.h> 
 #include <unistd.h> //close
 
-class Epoller{
+class Epoller
+{
 public:
     Epoller(int maxEvent = 1024);
-    ~Epoller();
+    ~Epoller() { close(epollFd_); }
 
     int AddFd(int fd, uint32_t events);
     int ModFd(int fd, uint32_t events);

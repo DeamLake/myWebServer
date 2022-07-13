@@ -8,7 +8,8 @@
 
 using namespace std;
 
-Log::Log() {
+Log::Log() 
+{
     lineCount_ = 0;
     isAsync_ = false;
     writeThread_ = nullptr;
@@ -17,9 +18,11 @@ Log::Log() {
     fp_ = nullptr;
 }
 
-Log::~Log() {
+Log::~Log() 
+{
     if(writeThread_ && writeThread_->joinable()) {
-        while(!deque_->empty()) {
+        while(!deque_->empty()) 
+        {
             deque_->flush();
         };
         deque_->Close();
@@ -32,18 +35,21 @@ Log::~Log() {
     }
 }
 
-int Log::GetLevel() {
+int Log::GetLevel() 
+{
     lock_guard<mutex> locker(mtx_);
     return level_;
 }
 
-void Log::SetLevel(int level) {
+void Log::SetLevel(int level) 
+{
     lock_guard<mutex> locker(mtx_);
     level_ = level;
 }
 
 void Log::init(int level = 1, const char* path, const char* suffix,
-    int maxQueueSize) {
+    int maxQueueSize) 
+{
     isOpen_ = true;
     level_ = level;
     if(maxQueueSize > 0) {
@@ -88,7 +94,8 @@ void Log::init(int level = 1, const char* path, const char* suffix,
     }
 }
 
-void Log::write(int level, const char *format, ...) {
+void Log::write(int level, const char *format, ...) 
+{
     struct timeval now = {0, 0};
     gettimeofday(&now, nullptr);
     time_t tSec = now.tv_sec;
@@ -149,7 +156,8 @@ void Log::write(int level, const char *format, ...) {
     }
 }
 
-void Log::AppendLogLevelTitle_(int level) {
+void Log::AppendLogLevelTitle_(int level) 
+{
     switch(level) {
     case 0:
         buff_.Append("[debug]: ", 9);
@@ -169,26 +177,31 @@ void Log::AppendLogLevelTitle_(int level) {
     }
 }
 
-void Log::flush() {
+void Log::flush() 
+{
     if(isAsync_) { 
         deque_->flush(); 
     }
     fflush(fp_);
 }
 
-void Log::AsyncWrite_() {
+void Log::AsyncWrite_() 
+{
     string str = "";
-    while(deque_->pop(str)) {
+    while(deque_->pop(str)) 
+    {
         lock_guard<mutex> locker(mtx_);
         fputs(str.c_str(), fp_);
     }
 }
 
-Log* Log::Instance() {
+Log* Log::Instance() 
+{
     static Log inst;
     return &inst;
 }
 
-void Log::FlushLogThread() {
+void Log::FlushLogThread() 
+{
     Log::Instance()->AsyncWrite_();
 }

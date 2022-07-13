@@ -12,7 +12,8 @@ typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::milliseconds MS;
 typedef Clock::time_point TimeStamp;
 
-struct TimeNode {
+struct TimeNode 
+{
     int id;
     TimeStamp expires;
     TimeoutCallBack cb;
@@ -21,10 +22,11 @@ struct TimeNode {
     }
 };
 
-class HeapTimer {
+class HeapTimer 
+{
 public:
-    HeapTimer() { heap_.reserve(64);}
-    ~HeapTimer() { clear();}
+    HeapTimer();
+    ~HeapTimer();
     void clear();
     void adjust(int id, int newExpires);
     void add(int id, int timeOut, const TimeoutCallBack& cb);

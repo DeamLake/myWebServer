@@ -2,12 +2,15 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <mysql/mysql.h>  //mysql
 #include <regex>
 
 #include "../buffer/buffer.h"
 #include "../log/log.h"
+#include "../pool/sqlconnRAII.h"
 
-class HttpRequest {
+class HttpRequest 
+{
 public:
     enum PARSE_STATE {
         REQUEST_LINE,
@@ -33,10 +36,10 @@ public:
     void Init();
     bool parse(Buffer& buff);
 
-    std::string path() const;
-    std::string& path();
-    std::string method() const;
-    std::string version() const;
+    std::string path() const { return path_; }
+    std::string& path() { return path_; }
+    std::string method() const { return method_; }
+    std::string version() const { return version_; }
     std::string GetPost(const std::string& key) const;
     std::string GetPost(const char* key) const;
     
